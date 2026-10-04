@@ -1,7 +1,29 @@
 # Gen 3 Party Icons + Shinies
 
-Replaces the party and PC Pokémon icons in FireRed and LeafGreen with the larger 40x30 icon set [found here](https://github.com/msikma/pokesprite?tab=readme-ov-file)
+Give FireRed and LeafGreen's menus a more expressive set of Pokémon icons.
 
-Shiny Pokémon use their own shiny party icons instead of the normal icon. The included sheets cover Pokémon through Generation 4 and work with National Dex Gen 3 when it is installed.
+**Gen 3 Party Icons + Shinies** replaces the small party and PC graphics with larger 40×30 icons and gives shiny Pokémon their own matching shiny artwork. The included sheets extend through Generation IV for players using an expanded National Dex.
 
-This mod only changes party and PC icons.
+The icon artwork is based on the [PokéSprite](https://github.com/msikma/pokesprite) project.
+
+## Features
+
+- Larger Pokémon icons in the party menu and PC
+- Unique shiny icons for shiny Pokémon
+- Coverage through Generation IV
+- Optional National Dex Gen 3 support
+- Changes menu icons only — battle sprites are untouched
+
+## Screenshots
+
+| Party Menu | Shiny Pokémon | PC Storage |
+| :---: | :---: | :---: |
+| _Screenshot coming soon_ | _Screenshot coming soon_ | _Screenshot coming soon_ |
+
+## Compatibility
+
+The standard FireRed and LeafGreen Pokédex works without additional mods. Install **National Dex Gen 3** to use the included Generation IV icon coverage with expanded species.
+
+## Installation
+
+Install **Gen 3 Party Icons + Shinies** through G1R Deluxe's mod browser, or import the mod ZIP manually.
