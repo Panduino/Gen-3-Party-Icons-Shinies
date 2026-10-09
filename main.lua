@@ -75,31 +75,41 @@ return function(mod)
 
   install()
 
-  -- The party menu already animates every icon's OAM callback, but its
-  -- unselected callback holds the sprite at a fixed idle offset. Add a
-  -- gentle bob only for our custom sheet icons, retaining vanilla cursor
-  -- bounce and every other OAM callback unchanged.
+  -- Make every custom party icon use the same bounce as the selected
+  -- icon. The engine's party menu installs different OAM callbacks for
+  -- selected and unselected slots; replace only the unselected callback
+  -- for our sheets, without touching the selected callback.
   local Oam = require("src.core.game3.oam")
   local originalSetCallback = Oam.setCallback
-  local idleCallbacks = setmetatable({}, { __mode = "k" })
+  local function bounceAll(sprite)
+    if not sprite then return end
+    local hpLevel = sprite.data and sprite.data[3] or 0
+    local duration = ({ [0]=5/60, [1]=5/60, [2]=16/60, [3]=32/60, [4]=5/60 })[hpLevel] or 8/60
+    local now = love.timer and love.timer.getTime and love.timer.getTime() or 0
+    local last = sprite._lastAnimTime or now
+    local dt = math.max(0, math.min(now - last, 0.1))
+    sprite._lastAnimTime = now
+    sprite._animElapsed = (sprite._animElapsed or 0) + dt
+    if duration > 0 then
+      while sprite._animElapsed >= duration do
+        sprite._animElapsed = sprite._animElapsed - duration
+        sprite.data[2] = 1 - (sprite.data[2] or 0)
+      end
+    end
+    local frame = sprite.data[2] or 0
+    sprite.x2 = 0
+    sprite.y2 = hpLevel == 4 and 0 or (frame == 0 and -3 or 1)
+    if sprite._quads and sprite._quads[frame] then
+      sprite.quad = sprite._quads[frame]
+    end
+  end
+
   Oam.setCallback = function(id, callback)
     local sprite = Oam.get(id)
-    if sprite and sprite.image and
-       (sprite.image == sheets.normal or sprite.image == sheets.shiny) and
-       type(callback) == "function" then
-      local wrapped = idleCallbacks[callback]
-      if not wrapped then
-        wrapped = function(spr)
-          callback(spr)
-          if spr and spr._quads and spr._quads[0] == spr._quads[1] then
-            local t = love.timer and love.timer.getTime and love.timer.getTime() or 0
-            local slot = spr.data and spr.data[4] or 1
-            spr.y2 = (spr.y2 or 0) + math.floor(math.sin(t * 5 + slot * 0.65) * 1.5 + 0.5)
-          end
-        end
-        idleCallbacks[callback] = wrapped
-      end
-      return originalSetCallback(id, wrapped)
+    if sprite and (sprite.image == sheets.normal or sprite.image == sheets.shiny)
+       and type(callback) == "function" then
+      -- Both selected and unselected custom icons get the same bounce.
+      return originalSetCallback(id, bounceAll)
     end
     return originalSetCallback(id, callback)
   end
