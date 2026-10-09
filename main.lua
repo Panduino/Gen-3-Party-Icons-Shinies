@@ -35,6 +35,9 @@ return function(mod)
     for base, extra in pairs(extraCells) do
       if base < nat then slot = slot + extra end
     end
+    -- Jirachi (#385) follows an extra sheet cell not accounted for by the
+    -- generic insertion table; correct its lookup without shifting others.
+    if nat == 385 then slot = slot + 1 end
     return slot
   end
 
@@ -77,8 +80,8 @@ return function(mod)
       w = PARTY_ICON_W,
       h = PARTY_ICON_H,
       sheetH = sh,
-      frames = 1,
-      quads = { [0] = quad },
+      frames = 2,
+      quads = { [0] = quad, [1] = quad },
       trueColor = true,
       gen3PartyIconSheet = true,
     }
