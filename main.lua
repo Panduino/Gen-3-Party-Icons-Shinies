@@ -74,6 +74,36 @@ return function(mod)
   end
 
   install()
+
+  -- The party menu already animates every icon's OAM callback, but its
+  -- unselected callback holds the sprite at a fixed idle offset. Add a
+  -- gentle bob only for our custom sheet icons, retaining vanilla cursor
+  -- bounce and every other OAM callback unchanged.
+  local Oam = require("src.core.game3.oam")
+  local originalSetCallback = Oam.setCallback
+  local idleCallbacks = setmetatable({}, { __mode = "k" })
+  Oam.setCallback = function(id, callback)
+    local sprite = Oam.get(id)
+    if sprite and sprite.image and
+       (sprite.image == sheets.normal or sprite.image == sheets.shiny) and
+       type(callback) == "function" then
+      local wrapped = idleCallbacks[callback]
+      if not wrapped then
+        wrapped = function(spr)
+          callback(spr)
+          if spr and spr._quads and spr._quads[0] == spr._quads[1] then
+            local t = love.timer and love.timer.getTime and love.timer.getTime() or 0
+            local slot = spr.data and spr.data[4] or 1
+            spr.y2 = (spr.y2 or 0) + math.floor(math.sin(t * 5 + slot * 0.65) * 1.5 + 0.5)
+          end
+        end
+        idleCallbacks[callback] = wrapped
+      end
+      return originalSetCallback(id, wrapped)
+    end
+    return originalSetCallback(id, callback)
+  end
+
   -- Gen3Compat.reseedSprites() may replace the function on map changes.
   -- Use a mod event rather than patching global love.update/draw.
   if mod.events and mod.events.on then
