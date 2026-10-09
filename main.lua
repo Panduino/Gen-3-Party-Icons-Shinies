@@ -87,5 +87,28 @@ return function(mod)
     return sheetMonIcon(mon) or originalMonIcon(mon)
   end
 
+  -- Gen3Recomp's party renderer animates the selected slot only. Animate
+  -- the custom icon sheet at draw time so unselected slots move as well,
+  -- without changing the game's cursor, selection, or party state.
+  if love and love.graphics and type(love.graphics.draw) == "function" then
+    local originalDraw = love.graphics.draw
+    love.graphics.draw = function(drawable, ...)
+      if drawable == iconSheets.normal or drawable == iconSheets.shiny then
+        local args = { ... }
+        -- Quad draws use (image, quad, x, y, ...). Do not alter non-quad
+        -- calls or draw calls that do not provide numeric coordinates.
+        if type(args[2]) == "number" and type(args[3]) == "number" then
+          local t = love.timer and love.timer.getTime and love.timer.getTime() or 0
+          local x, y = args[2], args[3]
+          -- A subtle 1-pixel idle bob, staggered by the icon's screen X.
+          local phase = math.floor(x / 24) * 0.55
+          args[3] = y + math.floor(math.sin(t * 5 + phase) * 1.25 + 0.5)
+        end
+        return originalDraw(drawable, unpack(args))
+      end
+      return originalDraw(drawable, ...)
+    end
+  end
+
   mod.log:info("Gen 3 Party Icons active")
 end
