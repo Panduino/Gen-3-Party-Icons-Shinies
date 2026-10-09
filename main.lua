@@ -41,11 +41,9 @@ return function(mod)
     local key = shiny and "shiny" or "normal"
     if iconSheets[key] ~= nil then return iconSheets[key] or nil end
     iconSheets[key] = false
-    if not (love and love.graphics and mod.assets and mod.assets.path) then return nil end
+    if not (love and love.graphics and mod.assets and mod.assets.image) then return nil end
     local file = shiny and "assets/party_icons_shiny.png" or "assets/party_icons.png"
-    local okPath, path = pcall(mod.assets.path, mod.assets, file)
-    if not okPath or not path then return nil end
-    local okImg, img = pcall(love.graphics.newImage, path)
+    local okImg, img = pcall(mod.assets.image, mod.assets, file)
     if not okImg or not img then return nil end
     img:setFilter("nearest", "nearest")
     iconSheets[key] = img
@@ -83,50 +81,10 @@ return function(mod)
     }
   end
 
-  -- New G1R Gen3Compat.reseedSprites() wraps Pokemon.monIcon again after
-  -- mods initialize, overriding direct replacements. Reinstall our adapter
-  -- after engine updates, while preserving its latest fallback.
-  local customMonIcon
-  local function installIconAdapter()
-    if Pokemon.monIcon == customMonIcon then return end
-    local fallback = Pokemon.monIcon
-    customMonIcon = function(mon)
-      return sheetMonIcon(mon) or fallback(mon)
-    end
-    Pokemon.monIcon = customMonIcon
-  end
-  installIconAdapter()
-
-  if love and type(love.update) == "function" then
-    local previousUpdate = love.update
-    love.update = function(...)
-      local result = previousUpdate(...)
-      installIconAdapter()
-      return result
-    end
-  end
-
-  -- Gen3Recomp's party renderer animates the selected slot only. Animate
-  -- the custom icon sheet at draw time so unselected slots move as well,
-  -- without changing the game's cursor, selection, or party state.
-  if love and love.graphics and type(love.graphics.draw) == "function" then
-    local originalDraw = love.graphics.draw
-    love.graphics.draw = function(drawable, ...)
-      if drawable == iconSheets.normal or drawable == iconSheets.shiny then
-        local args = { ... }
-        -- Quad draws use (image, quad, x, y, ...). Do not alter non-quad
-        -- calls or draw calls that do not provide numeric coordinates.
-        if type(args[2]) == "number" and type(args[3]) == "number" then
-          local t = love.timer and love.timer.getTime and love.timer.getTime() or 0
-          local x, y = args[2], args[3]
-          -- A subtle 1-pixel idle bob, staggered by the icon's screen X.
-          local phase = math.floor(x / 24) * 0.55
-          args[3] = y + math.floor(math.sin(t * 5 + phase) * 1.25 + 0.5)
-        end
-        return originalDraw(drawable, unpack(args))
-      end
-      return originalDraw(drawable, ...)
-    end
+  -- Use the engine's actual Gen 3 party icon renderer. Avoid overriding
+  -- love.update / love.graphics.draw: those are not supported mod hooks.
+  Pokemon.monIcon = function(mon)
+    return sheetMonIcon(mon) or originalMonIcon(mon)
   end
 
   mod.log:info("Gen 3 Party Icons active")
