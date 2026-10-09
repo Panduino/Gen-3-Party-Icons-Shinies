@@ -50,9 +50,10 @@ return function(mod)
     local index = iconSlot(nat) - 1
     local x, y = (index % COLS) * W, math.floor(index / COLS) * H
     if x + W > sw or y + H > sh then return nil end
-    local quad = love.graphics.newQuad(x, y, W, H, sw, sh)
+    -- Center 40px source art in the 32px party icon slot.
+    local quad = love.graphics.newQuad(x + 4, y, 32, H, sw, sh)
     local icon = {
-      image = sheet, w = W, h = H, sheetH = sh,
+      image = sheet, w = 32, h = H, sheetH = sh,
       frames = 2, quads = { [0] = quad, [1] = quad },
       trueColor = true, gen3PartyIconSheet = true,
     }
