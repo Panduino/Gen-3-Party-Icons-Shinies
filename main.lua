@@ -83,8 +83,27 @@ return function(mod)
     }
   end
 
-  Pokemon.monIcon = function(mon)
-    return sheetMonIcon(mon) or originalMonIcon(mon)
+  -- New G1R Gen3Compat.reseedSprites() wraps Pokemon.monIcon again after
+  -- mods initialize, overriding direct replacements. Reinstall our adapter
+  -- after engine updates, while preserving its latest fallback.
+  local customMonIcon
+  local function installIconAdapter()
+    if Pokemon.monIcon == customMonIcon then return end
+    local fallback = Pokemon.monIcon
+    customMonIcon = function(mon)
+      return sheetMonIcon(mon) or fallback(mon)
+    end
+    Pokemon.monIcon = customMonIcon
+  end
+  installIconAdapter()
+
+  if love and type(love.update) == "function" then
+    local previousUpdate = love.update
+    love.update = function(...)
+      local result = previousUpdate(...)
+      installIconAdapter()
+      return result
+    end
   end
 
   -- Gen3Recomp's party renderer animates the selected slot only. Animate
