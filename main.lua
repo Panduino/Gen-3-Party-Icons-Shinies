@@ -35,9 +35,6 @@ return function(mod)
     for base, extra in pairs(extraCells) do
       if base < nat then slot = slot + extra end
     end
-    -- Jirachi (#385) follows an extra sheet cell not accounted for by the
-    -- generic insertion table; correct its lookup without shifting others.
-    if nat == 385 then slot = slot + 1 end
     return slot
   end
 
