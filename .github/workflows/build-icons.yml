@@ -1,0 +1,32 @@
+name: Build per-Pokemon icon assets
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/party_icons*.png'
+      - 'tools/split_icons.py'
+      - '.github/workflows/build-icons.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - run: python tools/split_icons.py
+      - name: Commit generated icons
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/icons/
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate per-Pokemon icons for pokemon.icon hook"
+            git push
+          fi
