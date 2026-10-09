@@ -1,18 +1,26 @@
 {
   "id": "gen3_party_icons_shinies",
   "name": "Gen 3 Party Icons + Shinies",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "api": 2,
   "entry": "main.lua",
   "profile": "content",
   "category": "GRAPHICS",
-  "games": ["firered", "leafgreen"],
+  "games": [
+    "firered",
+    "leafgreen",
+    "emerald"
+  ],
   "game_version": ">=0.3.14",
   "priority": 275,
-  "permissions": ["engine_internals"],
+  "permissions": [
+    "engine_internals"
+  ],
   "dependencies": [],
-  "optional_dependencies": ["national_dex_gen3"],
+  "optional_dependencies": [
+    "national_dex_gen3"
+  ],
   "conflicts": [],
-  "description": "Replaces FireRed and LeafGreen party and PC icons with 40x30 icon sheets, including shiny variants and National Dex species through Gen 4.",
+  "description": "Replaces FireRed, LeafGreen and Emerald party and PC icons with custom shiny-aware icon sheets, including National Dex species through Gen 4.",
   "github": "Panduino/Gen-3-Party-Icons-Shinies"
 }
