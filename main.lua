@@ -35,8 +35,7 @@ return function(mod)
     for base, extra in pairs(extraCells) do
       if base < nat then slot = slot + extra end
     end
-    return slot
-  end
+    -- Verified against the 32-column PNG: Rayquaza=441, Jirachi=442,\n    -- Deoxys=443-446, Turtwig=447. The authored sheet has an\n    -- additional cell before Jirachi, but the Gen 4 boundary is aligned.\n    if nat == 385 or nat == 386 then slot = slot + 1 end\n    return slot\n  end
 
   local function partyIconSheet(shiny)
     local key = shiny and "shiny" or "normal"
