@@ -17,6 +17,25 @@ return function(mod)
     [373]=1,[376]=1,[380]=1,[381]=1,[386]=3,[412]=2,[413]=2,[422]=1,[423]=1,[428]=1,
     [445]=1,[448]=1,[460]=1,[475]=1,[479]=5,[487]=1,[492]=1,
   }
+  -- Atlas audit: 18 rows x 32 columns = 576 unique sprite positions.
+  -- The 493 base species and 83 alternate sprites occupy all 576 slots.
+  do
+    local extraCount=0
+    for _,count in pairs(extras) do extraCount=extraCount+count end
+    assert(extraCount==83,"Party icon form table does not match atlas")
+    local used={}
+    local cursor=0
+    for nat=1,493 do
+      local count=1+(extras[nat] or 0)
+      for form=0,count-1 do
+        assert(cursor<576 and not used[cursor],
+          ("Invalid icon slot for National #%d form %d"):format(nat,form))
+        used[cursor]=true
+        cursor=cursor+1
+      end
+    end
+    assert(cursor==576,"Party icon atlas does not cover every species/form")
+  end
   local atlases={}
   local function atlasSlot(nat)
     local slot=nat
