@@ -155,6 +155,15 @@ return function(mod)
     end
     wasEnabled,wasNext=enabled,nextBatch
   end
+  -- Options are changed in the mod settings menu, not on map entry.
+  -- Poll at runtime so switching either toggle actually applies immediately.
+  local originalRuntimeUpdate=GameRuntime.update
+  GameRuntime.update=function(...)
+    local result=originalRuntimeUpdate(...)
+    local ok,err=pcall(debugTick)
+    if not ok then mod.log:error("Icon debug: "..tostring(err)) end
+    return result
+  end
   if mod.events and mod.events.on then
     mod.events:on("game.ready",debugTick)
     mod.events:on("world.mapEnter",debugTick)
