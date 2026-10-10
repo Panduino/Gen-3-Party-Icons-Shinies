@@ -60,6 +60,17 @@ return function(mod)
     return icon
   end
 
+  -- The numbered PNGs contain interleaved mega/form sprites; their
+  -- filenames are NOT a reliable National Dex index at these positions.
+  -- Verified corrections for the reported shifted entries.
+  local correctedBaseFiles={
+    [215]=216, -- Sneasel (215.png is Mega Heracross)
+    [230]=231, -- Kingdra (230.png is Mega Houndoom)
+    [283]=284, -- Surskit (283.png is Mega Gardevoir)
+    [307]=308, -- Meditite (307.png is Mega Aggron)
+    [359]=360, -- Absol (359.png is not Absol)
+    [381]=382, -- Latios (381.png is Mega Latias/Latios sequence)
+  }
   local function sheetIcon(mon)
     if not mon or (Pokemon.isEgg and Pokemon.isEgg(mon)) then return nil end
     local species = Pokemon.monPicSpecies and Pokemon.monPicSpecies(mon)
@@ -76,7 +87,7 @@ return function(mod)
     if icons[key] then return icons[key] end
 
     local file = ("assets/icons/%s/%03d.png"):format(
-      shiny and "shiny" or "normal", nat)
+      shiny and "shiny" or "normal", correctedBaseFiles[nat] or nat)
     local ok, img = pcall(mod.assets.image, mod.assets, file)
     if not ok or not img then
       mod.log:warn("Could not load party icon: " .. file)
