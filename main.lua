@@ -108,7 +108,9 @@ return function(mod)
   end
   local function sheetIcon(mon)
     if not mon or (Pokemon.isEgg and Pokemon.isEgg(mon)) then return nil end
-    local species = Pokemon.monPicSpecies and Pokemon.monPicSpecies(mon)
+    -- Resolve the underlying species first: monPicSpecies changes Unown
+    -- into an internal letter species which need not have a Dex mapping.
+    local species = Pokemon.speciesOf and Pokemon.speciesOf(mon)
     local nat = species and Pokemon.national and tonumber(Pokemon.national(species))
     if not nat or nat < 1 or nat > 493 then return nil end
 
