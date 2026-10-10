@@ -100,6 +100,66 @@ return function(mod)
     return icon
   end
 
+  -- Debug: preview all National Dex icons in PC storage, 420 at a time.
+  -- The original PC contents are retained in memory and restored when
+  -- the toggle is turned off. Do not save while preview is active.
+  mod.options:define({
+    {key="debug_all_icons",label="DEBUG: FILL PC WITH ICON TEST POKEMON",type="toggle",default=false},
+    {key="debug_next_batch",label="DEBUG: NEXT ICON TEST BATCH",type="toggle",default=false},
+  })
+  local GameRuntime=require("src.core.game3.runtime")
+  local Storage=require("src.core.game3.storage")
+  local previewSession,originalBoxes,previewBatch,wasEnabled,wasNext
+  local function debugTick()
+    local ok,s=pcall(GameRuntime.getSession)
+    if not ok or not s then return end
+    local enabled=mod.options:get("debug_all_icons")
+    local nextBatch=mod.options:get("debug_next_batch")
+    if previewSession and (not enabled or s~=previewSession) then
+      if previewSession.storage and originalBoxes then
+        previewSession.storage.boxes=originalBoxes
+      end
+      previewSession,originalBoxes,previewBatch=nil,nil,nil
+      mod.log:info("Icon debug: original PC boxes restored")
+    end
+    if enabled and (not previewSession or (nextBatch and not wasNext)) then
+      local storage=Storage.ensure(s)
+      if not previewSession then
+        previewSession=s
+        originalBoxes=storage.boxes
+        previewBatch=0
+      else
+        previewBatch=previewBatch+1
+      end
+      local boxes=Storage.new().boxes
+      local first=previewBatch*420+1
+      local last=math.min(first+419,493)
+      if first>493 then
+        previewBatch=0
+        first,last=1,420
+      end
+      for nat=first,last do
+        local species=Pokemon.speciesFromNational(nat)
+        if species then
+          local pos=nat-first
+          local mon={
+            species=species,level=5,personality=nat*10007,
+            ivs={},evs={},moves={},hp=20,maxHp=20,
+          }
+          boxes[math.floor(pos/30)+1].mons[pos%30+1]=mon
+        end
+      end
+      storage.boxes=boxes
+      storage.currentBox=1
+      mod.log:info(("Icon debug: displaying species %d-%d in PC"):format(first,last))
+    end
+    wasEnabled,wasNext=enabled,nextBatch
+  end
+  if mod.events and mod.events.on then
+    mod.events:on("game.ready",debugTick)
+    mod.events:on("world.mapEnter",debugTick)
+  end
+
   -- The Gen 3 party and PC screens call Pokemon.monIcon directly.
   -- Install after Gen3Compat's initial wrapping and reinstall only if
   -- a later engine reseed replaces our function.
