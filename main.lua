@@ -10,40 +10,50 @@ return function(mod)
   -- Alternate-form artwork is stored in the original 32-column atlas.
   -- Base species still use individually numbered PNGs, avoiding offset drift.
   local W,H,COLS=40,30,32
-  local extras={
-    [3]=1,[6]=2,[9]=1,[65]=1,[94]=1,[115]=1,[127]=1,[130]=1,[142]=1,[150]=2,
-    [181]=1,[201]=27,[212]=1,[214]=1,[229]=1,[248]=1,[254]=1,[257]=1,[260]=1,
-    [282]=1,[303]=1,[306]=1,[308]=1,[310]=1,[351]=3,[354]=1,[359]=1,[362]=1,
-    [373]=1,[376]=1,[380]=1,[381]=1,[386]=3,[412]=2,[413]=2,[422]=1,[423]=1,[428]=1,
-    [445]=1,[448]=1,[460]=1,[475]=1,[479]=5,[487]=1,[492]=1,
+  -- Explicit 1-based atlas positions supplied by the sheet author.
+  -- The remaining positions are filled in National Pokédex order.
+  local extraPositions={
+    4,8,9,13,70,100,122,135,139,152,161,162,194,
+    214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,
+    253,256,272,292,302,328,350,354,357,360,
+    402,403,404,408,414,436,438,444,445,446,
+    473,474,476,477,488,490,513,517,530,
+    550,551,552,553,554,564,570,
   }
-  -- Atlas size is 18 rows x 32 columns (576 slots).
-  -- Atlas offsets include forms immediately after their base species.
-  do
-    local extraCount=0
-    for _,count in pairs(extras) do extraCount=extraCount+count end
-    assert(extraCount<=83,"Party icon form table exceeds atlas capacity")
-    local used={}
-    local cursor=0
-    for nat=1,493 do
-      local count=1+(extras[nat] or 0)
-      for form=0,count-1 do
-        assert(cursor<576 and not used[cursor],
-          ("Invalid icon slot for National #%d form %d"):format(nat,form))
-        used[cursor]=true
-        cursor=cursor+1
-      end
-    end
-    assert(cursor<=576,"Party icon atlas exceeds available artwork")
+  local formPositions={
+    [3]={4},[6]={8,9},[9]={13},[65]={70},[94]={100},
+    [115]={122},[127]={135},[130]={139},[142]={152},
+    [150]={161,162},[181]={194},
+    [201]={},[212]={253},[214]={256},[229]={272},[248]={292},
+    [257]={302},[282]={328},[303]={350},[306]={354},
+    [308]={357},[310]={360},[351]={402,403,404},
+    [354]={408},[359]={414},[380]={436},[381]={438},
+    [386]={444,445,446},[412]={473,474},[413]={476,477},
+    [422]={488},[423]={490},[445]={513},[448]={517},
+    [460]={530},[479]={550,551,552,553,554},
+    [487]={564},[492]={570},
+  }
+  -- Unown A is the base slot; B-Z, ! and ? are the following 27.
+  -- Row 7 col 22 to row 8 col 17 is a contiguous run.
+  for slot=215,241 do formPositions[201][#formPositions[201]+1]=slot end
+  local extras={}
+  for nat,positions in pairs(formPositions) do extras[nat]=#positions end
+  local isExtra={}
+  for _,slot in ipairs(extraPositions) do
+    assert(slot>=1 and slot<=576 and not isExtra[slot],"Duplicate/out-of-range extra slot "..slot)
+    isExtra[slot]=true
   end
+  local baseSlots={}
+  local national=0
+  for slot=1,576 do
+    if not isExtra[slot] then
+      national=national+1
+      if national<=493 then baseSlots[national]=slot end
+    end
+  end
+  assert(national>=493,"Not enough base sprite positions for National Dex")
   local atlases={}
-  local function atlasSlot(nat)
-    local slot=nat
-    for species,count in pairs(extras) do
-      if species<nat then slot=slot+count end
-    end
-    return slot
-  end
+  local function atlasSlot(nat) return baseSlots[nat] end
   local function formIndex(mon,nat)
     if nat==201 and Pokemon.unownLetter then
       return Pokemon.unownLetter(mon.personality)
@@ -66,7 +76,9 @@ return function(mod)
       atlases[atlasKey]=img
     end
     local sw,sh=img:getDimensions()
-    local slot=atlasSlot(nat)+form-1
+    local slot=(formPositions[nat] or {})[form]
+    if not slot then return nil end
+    slot=slot-1
     local x,y=(slot%COLS)*W,math.floor(slot/COLS)*H
     if x+W>sw or y+H>sh then return nil end
     local quad=love.graphics.newQuad(x+4,y,32,H,sw,sh)
