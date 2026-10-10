@@ -14,7 +14,7 @@ return function(mod)
   -- The remaining positions are filled in National Pokédex order.
   local extraPositions={
     4,8,9,13,70,100,122,135,139,152,161,162,194,
-    214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,
+    214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,
     253,256,272,292,302,328,350,354,357,360,
     402,403,404,408,414,436,438,444,445,446,
     473,474,476,477,488,490,513,517,530,
@@ -33,9 +33,9 @@ return function(mod)
     [460]={530},[479]={550,551,552,553,554},
     [487]={564},[492]={570},
   }
-  -- Unown A is the base slot; B-Z, ! and ? are the following 27.
-  -- Row 7 col 22 to row 8 col 17 is a contiguous run.
-  for slot=215,241 do formPositions[201][#formPositions[201]+1]=slot end
+  -- Unown base is row 7 col 21 (slot 213); its 27 other forms
+  -- occupy slots 214-240. Wobbuffet follows at slot 241.
+  for slot=214,240 do formPositions[201][#formPositions[201]+1]=slot end
   local extras={}
   for nat,positions in pairs(formPositions) do extras[nat]=#positions end
   local isExtra={}
