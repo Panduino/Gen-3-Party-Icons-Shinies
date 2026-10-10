@@ -23,8 +23,6 @@ return function(mod)
     for species,count in pairs(extras) do
       if species<nat then slot=slot+count end
     end
-    if nat>=252 then slot=slot+1 end
-    if nat==385 or nat==386 then slot=slot+1 end
     return slot
   end
   local function formIndex(mon,nat)
@@ -60,28 +58,34 @@ return function(mod)
     return icon
   end
 
-  -- The numbered PNGs are sequential sprite slots, not National Dex IDs.
-  -- These positions are additional artwork, not new species.
-  local nonSpeciesSlots={
-    [215]=true, -- Mega Heracross
-    [230]=true, -- Mega Houndoom
-    [283]=true, -- Mega Gardevoir
-    [307]=true, -- Mega Aggron
-    [352]=true,[353]=true,[354]=true, -- Castform weather forms
-    [359]=true, -- Mega Banette
-    [361]=true, -- Mega Absol
-    [380]=true, -- Mega Latias
-    [382]=true, -- Mega Latios
-  }
-  local baseFileByNational={}
-  do
-    local national=0
-    for file=1,493 do
-      if not nonSpeciesSlots[file] then
-        national=national+1
-        baseFileByNational[national]=file
-      end
+  -- Full National Dex mapping uses the packed sheet's explicit insertion
+  -- counts, rather than assuming 001.png ... 493.png are National IDs.
+  -- The latter are merely the first 493 artwork slots (including forms).
+  -- Every National species and alternate form is therefore addressed from
+  -- its position in the complete atlas, including species after slot 493.
+  local function baseIcon(nat,shiny)
+    local key=(shiny and "s" or "n")..nat..":base"
+    if icons[key] then return icons[key] end
+    local atlasKey=shiny and "shiny" or "normal"
+    local img=atlases[atlasKey]
+    if not img then
+      local path=shiny and "assets/party_icons_shiny.png" or "assets/party_icons.png"
+      local ok,result=pcall(mod.assets.image,mod.assets,path)
+      if not ok or not result then return nil end
+      img=result
+      if img.setFilter then img:setFilter("nearest","nearest") end
+      atlases[atlasKey]=img
     end
+    local sw,sh=img:getDimensions()
+    local slot=atlasSlot(nat)-1
+    local x,y=(slot%COLS)*W,math.floor(slot/COLS)*H
+    if x+W>sw or y+H>sh then return nil end
+    local quad=love.graphics.newQuad(x+4,y,32,H,sw,sh)
+    local icon={image=img,w=32,h=H,sheetH=sh,frames=2,
+      quads={[0]=quad,[1]=quad},trueColor=true,gen3PartyIconSheet=true}
+    icons[key]=icon
+    iconImages[img]=true
+    return icon
   end
   local function sheetIcon(mon)
     if not mon or (Pokemon.isEgg and Pokemon.isEgg(mon)) then return nil end
@@ -95,32 +99,7 @@ return function(mod)
       local alternate=formIcon(nat,form,shiny)
       if alternate then return alternate end
     end
-    local key = (shiny and "s" or "n") .. nat
-    if icons[key] then return icons[key] end
-
-    local file = ("assets/icons/%s/%03d.png"):format(
-      shiny and "shiny" or "normal", baseFileByNational[nat] or nat)
-    local ok, img = pcall(mod.assets.image, mod.assets, file)
-    if not ok or not img then
-      mod.log:warn("Could not load party icon: " .. file)
-      return nil
-    end
-    if img.setFilter then img:setFilter("nearest", "nearest") end
-    local sw, sh = img:getDimensions()
-    if sw < 32 or sh < 30 then
-      mod.log:warn("Invalid party icon dimensions: " .. file)
-      return nil
-    end
-    local x = math.floor((sw - 32) / 2)
-    local quad = love.graphics.newQuad(x, 0, 32, 30, sw, sh)
-    local icon = {
-      image = img, w = 32, h = 30, sheetH = sh,
-      frames = 2, quads = { [0] = quad, [1] = quad },
-      trueColor = true, gen3PartyIconSheet = true,
-    }
-    icons[key] = icon
-    iconImages[img] = true
-    return icon
+    return baseIcon(nat,shiny)
   end
 
   -- Debug: preview all National Dex icons in PC storage, 420 at a time.
