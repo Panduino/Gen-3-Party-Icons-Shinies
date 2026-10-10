@@ -158,6 +158,15 @@ return function(mod)
   end
   -- Options are changed in the mod settings menu, not on map entry.
   -- Poll at runtime so switching either toggle actually applies immediately.
+  -- Hook the actual PC opening path as well: engine callers may cache
+  -- GameRuntime.update before a mod wraps it.
+  local BoxUI=require("src.ui.game3.box_storage_ui")
+  local originalBoxShow=BoxUI.show
+  BoxUI.show=function(...)
+    local ok,err=pcall(debugTick)
+    if not ok then mod.log:error("Icon debug on PC open: "..tostring(err)) end
+    return originalBoxShow(...)
+  end
   local originalRuntimeUpdate=GameRuntime.update
   GameRuntime.update=function(...)
     local result=originalRuntimeUpdate(...)
