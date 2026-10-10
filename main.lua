@@ -17,7 +17,7 @@ return function(mod)
     for species, count in pairs(extra) do
       if species < nat then slot = slot + count end
     end
-    if nat == 385 or nat == 386 then slot = slot + 1 end
+    -- The atlas includes an extra Celebi/form cell before Treecko.\n    -- Without this offset, #252 (Treecko) draws Celebi, and the\n    -- following Hoenn icons are shifted by one slot.\n    if nat >= 252 then slot = slot + 1 end\n    if nat == 385 or nat == 386 then slot = slot + 1 end
     return slot
   end
 
