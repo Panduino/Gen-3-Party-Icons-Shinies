@@ -143,7 +143,7 @@ return function(mod)
         if species then
           local pos=nat-first
           local mon={
-            species=species,level=5,personality=nat*10007,
+            species=species,speciesNumbering=Pokemon.NUMBERING_INTERNAL,level=5,personality=nat*10007,
             ivs={},evs={},moves={},hp=20,maxHp=20,
           }
           boxes[math.floor(pos/30)+1].mons[pos%30+1]=mon
@@ -151,6 +151,7 @@ return function(mod)
       end
       storage.boxes=boxes
       storage.currentBox=1
+      mod.log:info("Icon debug: stored "..tostring(Storage.countTotalMons(storage)).." preview Pokemon")
       mod.log:info(("Icon debug: displaying species %d-%d in PC"):format(first,last))
     end
     wasEnabled,wasNext=enabled,nextBatch
